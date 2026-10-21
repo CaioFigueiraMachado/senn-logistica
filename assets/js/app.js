@@ -1,0 +1,102 @@
+/* Scripts compartilhados: mapas (com fallback), chat e utilidades */
+const CSRF = document.querySelector('meta[name=csrf]')?.content || '';
+const CORES = ['#0b5cd6', '#c2410c', '#15803d', '#7c3aed', '#be123c', '#0e7490'];
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+async function postJSON(url, dados) {
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+    body: JSON.stringify(dados),
+  });
+  return r.json();
+}
+
+/** Cria um mapa Leaflet. Sem acesso aos tiles/biblioteca, retorna null (modo fallback). */
+function criarMapa(id, centro) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  if (typeof L === 'undefined') {
+    el.innerHTML = '<div class="aviso aviso-info">Mapa indisponível (sem conexão com o serviço de mapas). As informações continuam disponíveis em lista.</div>';
+    el.style.height = 'auto';
+    return null;
+  }
+  const mapa = L.map(id).setView(centro, 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; OpenStreetMap',
+  }).addTo(mapa);
+  return mapa;
+}
+
+function iconeNumero(n, cor) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="background:${cor};color:#fff;border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px #0006">${n}</div>`,
+    iconSize: [24, 24], iconAnchor: [12, 12],
+  });
+}
+
+function desenharRotas(id, rotas, deposito) {
+  document.querySelectorAll('.cor').forEach(s => s.style.color = CORES[s.dataset.i % CORES.length]);
+  const mapa = criarMapa(id, deposito);
+  if (!mapa) return;
+  L.marker(deposito).addTo(mapa).bindPopup('<strong>Depósito</strong>');
+  const limites = [deposito];
+  rotas.forEach((r, i) => {
+    const cor = CORES[i % CORES.length];
+    const pts = [deposito, ...r.paradas.map(p => [+p.lat, +p.lng]), deposito];
+    L.polyline(pts, { color: cor, weight: 4, opacity: .8 }).addTo(mapa);
+    r.paradas.forEach((p, k) => {
+      L.marker([+p.lat, +p.lng], { icon: iconeNumero(k + 1, cor) }).addTo(mapa)
+        .bindPopup(`<strong>${esc(p.codigo)}</strong><br>${esc(p.endereco)}<br>Rota ${r.id} · ${esc(r.placa)}`);
+      limites.push([+p.lat, +p.lng]);
+    });
+  });
+  mapa.fitBounds(limites, { padding: [30, 30] });
+}
+
+/* ---------------- Chat (RF13) ---------------- */
+(() => {
+  const btn = document.getElementById('chat-btn');
+  if (!btn) return;
+  const painel = document.getElementById('chat');
+  const msgs = document.getElementById('chat-msgs');
+  const form = document.getElementById('chat-form');
+  const txt = document.getElementById('chat-txt');
+  const alternar = abrir => {
+    painel.hidden = !abrir;
+    btn.setAttribute('aria-expanded', abrir);
+    if (abrir) txt.focus();
+  };
+  btn.onclick = () => alternar(painel.hidden);
+  document.getElementById('chat-fechar').onclick = () => { alternar(false); btn.focus(); };
+  painel.addEventListener('keydown', e => { if (e.key === 'Escape') { alternar(false); btn.focus(); } });
+
+  const add = (html, quem) => {
+    const d = document.createElement('div');
+    d.className = 'msg ' + quem;
+    d.innerHTML = html;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+    return d;
+  };
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const pergunta = txt.value.trim();
+    if (!pergunta) return;
+    add(esc(pergunta), 'eu');
+    txt.value = '';
+    const espera = add('Pensando...', 'bot');
+    try {
+      const r = await postJSON('api/chat.php', { pergunta });
+      let html = esc(r.resposta);
+      (r.acoes || []).forEach(a => { html += `<br><a class="acao" href="${esc(a.url)}">→ ${esc(a.rotulo)}</a>`; });
+      espera.innerHTML = html;
+    } catch {
+      espera.textContent = 'Não consegui responder agora. Tente novamente.';
+    }
+  };
+})();
