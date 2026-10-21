@@ -23,8 +23,8 @@ require __DIR__ . '/includes/header.php';
   <label>Até <input type="date" name="fim" value="<?= e($fim) ?>"></label>
   <label>Região <select name="regiao"><option value="">Todas</option><?php foreach ($regioes as $r): ?><option <?= $regiao === $r ? 'selected' : '' ?>><?= e($r) ?></option><?php endforeach; ?></select></label>
   <button>Aplicar</button>
-  <a class="btn btn-sec" href="exportar.php?formato=excel&<?= e($qs) ?>">⬇ Excel</a>
-  <a class="btn btn-sec" href="exportar.php?formato=pdf&<?= e($qs) ?>" target="_blank">⬇ PDF</a>
+  <a class="btn btn-sec" href="exportar.php?formato=excel&<?= e($qs) ?>">Exportar Excel</a>
+  <a class="btn btn-sec" href="exportar.php?formato=pdf&<?= e($qs) ?>" target="_blank">Exportar PDF</a>
 </form>
 
 <div class="kpis">

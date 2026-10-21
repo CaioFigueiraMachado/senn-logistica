@@ -69,7 +69,7 @@ function criarMapa(id, centro) {
 /** Selo que indica se a resposta veio da IA externa ou do modelo local. */
 function seloIA(fonte) {
   const online = /gemini/i.test(fonte || '');
-  return `<span class="selo ${online ? 'selo-on' : 'selo-local'}">${online ? '✨ ' + esc(fonte) : '⚙ ' + esc(fonte || 'Modelo local')}</span>`;
+  return `<span class="selo ${online ? 'selo-on' : 'selo-local'}">${online ? esc(fonte) : esc(fonte || 'Modelo local')}</span>`;
 }
 
 function iconeNumero(n, cor) {
@@ -130,7 +130,7 @@ function desenharRotas(id, rotas, deposito) {
     try {
       const r = await postJSON('api/chat.php', { pergunta });
       let html = esc(r.resposta);
-      (r.acoes || []).forEach(a => { html += `<br><a class="acao" href="${esc(a.url)}">→ ${esc(a.rotulo)}</a>`; });
+      (r.acoes || []).forEach(a => { html += `<br><a class="acao" href="${esc(a.url)}">${esc(a.rotulo)}</a>`; });
       espera.innerHTML = html + '<br>' + seloIA(r.fonte === 'gemini' ? 'Gemini' : 'Modelo local');
     } catch {
       espera.textContent = 'Sem conexão com o servidor. Tente novamente.';

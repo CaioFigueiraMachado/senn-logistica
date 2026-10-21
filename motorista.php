@@ -81,7 +81,7 @@ require __DIR__ . '/includes/header.php';
     <h2>Rota #<?= $r['id'] ?> · <?= e($r['placa']) ?> · <?= date('d/m/Y', strtotime($r['data_rota'])) ?></h2>
     <p><?= count($paradas) ?> paradas · <?= number_format($r['distancia_km'], 1, ',', '.') ?> km · cerca de <?= $r['tempo_min'] ?> min</p>
     <?php if ($r['status'] === 'liberada'): ?>
-      <form method="post"><?= csrf_campo() ?><input type="hidden" name="acao" value="iniciar"><button class="btn" name="rota" value="<?= $r['id'] ?>">▶ Iniciar rota</button></form>
+      <form method="post"><?= csrf_campo() ?><input type="hidden" name="acao" value="iniciar"><button class="btn" name="rota" value="<?= $r['id'] ?>">Iniciar rota</button></form>
     <?php else: ?>
       <p class="aviso aviso-info" id="gps-status" data-rota="<?= $r['id'] ?>">Compartilhando localização em tempo real...</p>
     <?php endif; ?>

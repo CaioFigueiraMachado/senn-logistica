@@ -318,21 +318,21 @@ function gerar_insights(int $dias = 30): array {
     $regs = $est['porRegiao'];
     if ($regs) {
         $pior = $regs[0]; $melhor = end($regs);
-        $ins[] = "Gargalo: {$pior['regiao']} tem o menor índice de entrega no prazo ({$pior['otd']}%), contra {$melhor['otd']}% em {$melhor['regiao']}. Revise janelas e a sequência das rotas nessa região.";
+        $ins[] = "{$pior['regiao']} é onde mais acontecem atrasos: só {$pior['otd']}% das entregas chegam no prazo, contra {$melhor['otd']}% em {$melhor['regiao']}. Vale revisar as janelas e a ordem das paradas nessa região.";
         usort($regs, fn($a, $b) => $b['custo_entrega'] <=> $a['custo_entrega']);
         $caro = $regs[0];
-        $ins[] = "Maior custo: {$caro['regiao']} custa cerca de R$ " . number_format($caro['custo_entrega'], 2, ',', '.') . " por entrega. Consolidar pedidos dessa região em uma rota dedicada reduz a quilometragem vazia.";
+        $ins[] = "{$caro['regiao']} é a região mais cara de atender, cerca de R$ " . number_format($caro['custo_entrega'], 2, ',', '.') . " por entrega. Juntar os pedidos de lá numa rota própria reduz os quilômetros rodados à toa.";
         $falhas = array_sum(array_column($regs, 'falhas'));
-        if ($falhas) $ins[] = "Foram registradas $falhas falhas de entrega em {$dias} dias. Envie aviso prévio ao destinatário e use código de confirmação para reduzir ausências.";
+        if ($falhas) $ins[] = "Tivemos $falhas falhas de entrega nos últimos {$dias} dias. Avisar o destinatário antes e pedir um código de confirmação ajuda a evitar que ninguém esteja em casa.";
     }
     $horas = $est['porHora'];
     if ($horas) {
         usort($horas, fn($a, $b) => $b['atraso'] <=> $a['atraso']);
-        $ins[] = "As janelas que começam às {$horas[0]['h']}h têm {$horas[0]['atraso']}% de atraso, a pior faixa do dia. Antecipe a saída dos veículos ou amplie essas janelas.";
+        $ins[] = "O pior horário é o das {$horas[0]['h']}h: {$horas[0]['atraso']}% dessas entregas atrasam. Sair mais cedo com os veículos ou alargar essas janelas deve resolver boa parte.";
     }
     $prev = prever_demanda(7);
     $total7 = array_sum(array_map('array_sum', $prev));
-    $ins[] = 'A previsão para os próximos 7 dias é de cerca de ' . round($total7) . ' entregas. Dimensione a frota para aproximadamente ' . max(1, (int)ceil($total7 / 7 / 15)) . ' veículos por dia (15 entregas por veículo).';
-    if (($est['frota']['manutencao'] ?? 0) > 0) $ins[] = "Há {$est['frota']['manutencao']} veículo(s) em manutenção, o que reduz a capacidade disponível.";
+    $ins[] = 'Para os próximos 7 dias, a previsão é de umas ' . round($total7) . ' entregas. Com cerca de ' . max(1, (int)ceil($total7 / 7 / 15)) . ' veículo(s) por dia na rua (15 entregas cada), a operação dá conta.';
+    if (($est['frota']['manutencao'] ?? 0) > 0) $ins[] = "Lembre que {$est['frota']['manutencao']} veículo(s) estão em manutenção, então a capacidade disponível está menor que o normal.";
     return ['fonte' => 'Modelo analítico local (fallback)', 'insights' => $ins, 'dados' => $est];
 }

@@ -27,7 +27,7 @@ $titulo = 'Alertas';
 require __DIR__ . '/includes/header.php';
 ?>
 <h1>Alertas e notificações</h1>
-<form method="post" class="acoes"><?= csrf_campo() ?><button name="verificar" value="1">↻ Executar monitoramento agora</button></form>
+<form method="post" class="acoes"><?= csrf_campo() ?><button name="verificar" value="1">Verificar agora</button></form>
 <section class="cartao tabela">
   <h2>Abertos (<?= count($abertos) ?>)</h2>
   <table><thead><tr><th>Tipo</th><th>Mensagem</th><th>Criado</th><th>E-mail</th><th></th></tr></thead><tbody>
@@ -37,7 +37,7 @@ require __DIR__ . '/includes/header.php';
       <td><form method="post"><?= csrf_campo() ?><button class="btn-peq" name="resolver" value="<?= $a['id'] ?>">Resolver</button></form></td></tr>
   <?php endforeach; ?>
   </tbody></table>
-  <?php if (!$abertos): ?><p>Nenhum alerta aberto. 🎉</p><?php endif; ?>
+  <?php if (!$abertos): ?><p>Tudo em ordem por aqui: nenhum alerta aberto.</p><?php endif; ?>
 </section>
 <div class="grade">
   <section class="cartao tabela"><h2>Resolvidos recentemente</h2>

@@ -126,6 +126,8 @@ td small { color: var(--sub); }
 .ia-fonte { font-size: 12px; color: var(--sub); }
 .insight { border-left: 3px solid var(--destaque); padding: 8px 12px; margin: 0 0 10px; background: var(--hover); border-radius: 0 var(--raio-p) var(--raio-p) 0; }
 
+.cor { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; background: currentColor; }
+
 /* ---------- Mapa ---------- */
 .mapa { height: 500px; border-radius: 10px; border: 1px solid var(--borda); z-index: 0; }
 [data-tema="escuro"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); }

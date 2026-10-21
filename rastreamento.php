@@ -71,7 +71,7 @@ async function atualizar() {
     pts.push([+e.lat, +e.lng]);
   });
   d.veiculos.forEach(v => {
-    const icone = L.divIcon({ className: '', html: `<div style="background:#0f1b33;color:#fff;padding:3px 7px;border-radius:6px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px #0008">🚚 ${esc(v.placa)}</div>`, iconAnchor: [30, 12] });
+    const icone = L.divIcon({ className: '', html: `<div style="background:#171717;color:#fff;padding:3px 7px;border-radius:6px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px #0008">${esc(v.placa)}</div>`, iconAnchor: [30, 12] });
     L.marker([+v.lat, +v.lng], { icon: icone }).addTo(camada)
       .bindPopup(`<strong>${esc(v.placa)}</strong> (${esc(v.tipo)})<br>${esc(v.motorista || 'Sem rota ativa')}<br>Status: ${esc(v.status)}<br>Posição: ${esc(v.posicao_em || '-')}`);
   });

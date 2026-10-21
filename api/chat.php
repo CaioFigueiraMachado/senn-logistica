@@ -34,13 +34,14 @@ if (preg_match('/(ped|csv)-?\s?([a-z0-9]+)/i', $pergunta, $m)) {
 } elseif ($tem('atras', 'risco')) {
     $n = q("SELECT COUNT(*) FROM pedidos WHERE status IN ('pendente','roteirizado','a_caminho') AND janela_fim < NOW()")->fetchColumn();
     $r = q("SELECT codigo, risco_atraso FROM pedidos WHERE status IN ('pendente','roteirizado','a_caminho') AND risco_atraso >= 35 ORDER BY risco_atraso DESC LIMIT 5")->fetchAll();
-    $resposta = "Há $n entrega(s) em aberto já fora da janela." . ($r ? ' Maior risco segundo a IA: ' . implode(', ', array_map(fn($x) => "{$x['codigo']} ({$x['risco_atraso']}%)", $r)) . '.' : '');
+    $resposta = ($n ? "Neste momento, $n entrega(s) em aberto já passaram da janela combinada." : 'Boa notícia: nenhuma entrega em aberto está fora da janela agora.')
+        . ($r ? ' As que mais me preocupam são ' . implode(', ', array_map(fn($x) => "{$x['codigo']} ({$x['risco_atraso']}% de risco)", $r)) . '.' : ' E nenhuma aparece com risco alto de atrasar.');
     $contexto['atrasadas'] = $n; $contexto['riscos'] = $r;
     $acoes[] = ['rotulo' => 'Abrir análise de risco', 'url' => 'ia.php'];
 } elseif ($tem('otd', 'prazo', 'indicador', 'custo', 'km', 'quilômetro', 'ocupação', 'desempenho', 'dashboard')) {
     $k = indicadores(date('Y-m-d', strtotime('-30 days')), date('Y-m-d'));
-    $resposta = "Nos últimos 30 dias: OTD de {$k['otd']}%, custo médio de R$ " . number_format($k['custo_entrega'], 2, ',', '.') . ' por entrega, '
-        . number_format($k['km'], 0, ',', '.') . " km rodados, {$k['entregues']} entregas concluídas e {$k['falhas']} falhas. Ocupação da frota agora: {$k['ocupacao_frota']}%.";
+    $resposta = 'Nos últimos 30 dias, ' . str_replace('.', ',', $k['otd']) . "% das entregas chegaram no prazo (OTD). Foram {$k['entregues']} entregas concluídas e {$k['falhas']} falhas, com "
+        . number_format($k['km'], 0, ',', '.') . ' km rodados e custo médio de R$ ' . number_format($k['custo_entrega'], 2, ',', '.') . " por entrega. Agora, {$k['ocupacao_frota']}% da frota está na rua.";
     unset($k['serie']);
     $contexto['indicadores'] = $k;
     $acoes[] = ['rotulo' => 'Abrir dashboard', 'url' => 'dashboard.php'];
@@ -77,17 +78,39 @@ if (preg_match('/(ped|csv)-?\s?([a-z0-9]+)/i', $pergunta, $m)) {
     $resposta = 'Os dados pessoais são tratados só para a gestão das entregas, com consentimento. Motoristas podem ser excluídos em Motoristas e destinatários podem ser anonimizados em Pedidos.';
 }
 
+// Conversa casual (cumprimentos, agradecimentos etc.) quando não há pergunta sobre a operação
+$primeiro = explode(' ', $u['nome'])[0];
+$h = (int)date('G');
+$saudacao = $h < 12 ? 'Bom dia' : ($h < 18 ? 'Boa tarde' : 'Boa noite');
+$casual = fn(string $re) => (bool)preg_match('/(^|[^\p{L}])(' . $re . ')([^\p{L}]|$)/iu', $t);
+if (!$resposta) {
+    if ($casual('obrigad[oa]|valeu|vlw|agradeço|brigad[oa]')) {
+        $resposta = "Por nada, $primeiro! Se precisar de mais alguma coisa, é só chamar.";
+    } elseif ($casual('tchau|até mais|ate mais|até logo|falou|flw')) {
+        $resposta = "Até mais, $primeiro! Bom trabalho por aí.";
+    } elseif ($casual('tudo bem|tudo bom|como vai|como você está|como voce esta|beleza|blz')) {
+        $resposta = "Tudo certo por aqui, obrigado por perguntar! E com você? Se quiser, posso ver como estão as entregas de hoje.";
+        $acoes[] = ['rotulo' => 'Ver entregas de hoje', 'url' => $podeGestao ? 'pedidos.php?data=' . date('Y-m-d') : 'motorista.php'];
+    } elseif ($casual('quem é você|quem e voce|o que você faz|o que voce faz|o que você sabe|ajuda|me ajuda')) {
+        $resposta = "Sou o assistente da SENN AI-X. Consigo te dizer como está um pedido (é só mandar o código, tipo PED-1001), quantas entregas estão atrasadas, como andam os indicadores, a previsão de demanda e os alertas. Também explico como usar qualquer tela do sistema.";
+    } elseif ($casual('oi|olá|ola|oie|eai|e aí|e ai|opa|hey|bom dia|boa tarde|boa noite|salve')) {
+        $resposta = "$saudacao, $primeiro! Tudo bem? Como posso te ajudar hoje?";
+    }
+}
+
 // Camada LLM: redige a resposta final com base nos dados reais consultados
 $fonte = 'local';
 $prompt = "Você é o SENN AI-X Helper, assistente de uma plataforma de gestão logística de última milha. "
-    . "Responda em português do Brasil, em no máximo 4 frases, de forma objetiva. Use somente os dados fornecidos; se não souber, diga e indique a tela do sistema. "
+    . "Responda em português do Brasil, em no máximo 4 frases, num tom cordial e natural, como um colega de trabalho, sem emojis. "
+    . "Chame o usuário pelo primeiro nome ($primeiro) quando fizer sentido. Para cumprimentos e conversa casual, responda com simpatia e ofereça ajuda. "
+    . "Para perguntas sobre a operação, use somente os dados fornecidos; se não souber, diga e indique a tela do sistema. "
     . "Telas: Dashboard, Rastreamento, Rotas (IA), Pedidos (cadastro e CSV), Veículos, Motoristas, Alertas, Análise IA, Minhas entregas (motorista), Manual.\n"
     . "Perfil do usuário: {$u['perfil']}.\nDados consultados: " . json_encode(['resposta_base' => $resposta] + $contexto, JSON_UNESCAPED_UNICODE)
     . "\nPergunta: $pergunta";
 if ($pergunta !== '' && ($llm = gemini($prompt))) { $resposta = trim($llm); $fonte = 'gemini'; }
 
 if (!$resposta) {
-    $resposta = 'Posso ajudar com: status de um pedido (ex.: "status do PED-1001"), entregas atrasadas, indicadores (OTD, custo, km), previsão de demanda, alertas, frota e como usar as telas.';
+    $resposta = "Hmm, não entendi bem essa, $primeiro. Você pode me perguntar, por exemplo, como está o pedido PED-1001, quantas entregas estão atrasadas, qual o OTD do mês ou como importar um CSV.";
     $acoes[] = ['rotulo' => 'Abrir manual', 'url' => 'manual.php'];
 }
 if ($u['perfil'] === 'motorista') $acoes = array_values(array_filter($acoes, fn($a) => !in_array($a['url'], ['dashboard.php', 'ia.php', 'veiculos.php', 'alertas.php', 'rotas.php', 'pedidos.php', 'rastreamento.php'])));

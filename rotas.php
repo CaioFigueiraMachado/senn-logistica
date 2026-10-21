@@ -115,7 +115,7 @@ require __DIR__ . '/includes/header.php';
         <?php if (!$disponiveis): ?><p>Nenhum veículo disponível.</p><?php endif; ?>
       </fieldset>
     </div>
-    <button class="btn">⚙ Gerar rotas otimizadas</button>
+    <button class="btn">Gerar rotas otimizadas</button>
   </form>
   <?php endif; ?>
 </section>
@@ -129,7 +129,7 @@ require __DIR__ . '/includes/header.php';
 <div class="grade">
 <?php foreach ($rotas as $i => $r): ?>
   <section class="cartao">
-    <h2><span class="cor" data-i="<?= $i ?>">■</span> Rota #<?= $r['id'] ?> · <?= e($r['placa']) ?> (<?= e($r['tipo']) ?>)</h2>
+    <h2><span class="cor" data-i="<?= $i ?>" aria-hidden="true"></span> Rota #<?= $r['id'] ?> · <?= e($r['placa']) ?> (<?= e($r['tipo']) ?>)</h2>
     <p><?= e($r['motorista'] ?? 'Sem motorista vinculado') ?> · <?= number_format($r['distancia_km'], 1, ',', '.') ?> km · <?= $r['tempo_min'] ?> min · R$ <?= number_format($r['custo'], 2, ',', '.') ?>
       · <span class="tag tag-<?= $r['status'] === 'planejada' ? 'media' : 'ok' ?>"><?= e($r['status']) ?></span></p>
     <ol>

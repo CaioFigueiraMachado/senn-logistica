@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="tela-login">
 <main class="cartao login">
-  <h1><span class="logo" aria-hidden="true">◆</span> SENN AI-X</h1>
+  <h1><span class="logo" aria-hidden="true">S</span> SENN AI-X</h1>
   <p class="sub">Gestão inteligente de entregas de última milha</p>
   <?php if ($erro): ?><div class="aviso aviso-erro" role="alert"><?= e($erro) ?></div><?php endif; ?>
   <form method="post">
@@ -54,16 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </label>
     <button class="btn">Entrar</button>
   </form>
-  <details class="demo">
-    <summary>Usuários de demonstração</summary>
-    <p>Senha de todos: <code>Senai@2026</code></p>
-    <ul>
-      <li>admin@senn.com · Administrador</li>
-      <li>gestor@senn.com · Gestor de frota</li>
-      <li>despacho@senn.com · Despachante</li>
-      <li>motorista@senn.com · Motorista</li>
-    </ul>
-  </details>
+  <p class="demo">Esqueceu a senha? Fale com o administrador da sua transportadora.</p>
 </main>
 </body>
 </html>
