@@ -71,7 +71,7 @@ $iniciais = mb_strtoupper(implode('', array_map(fn($p) => mb_substr($p, 0, 1), a
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 <div class="app">
 <aside class="lateral" id="lateral" aria-label="Menu principal">
-  <div class="marca"><img class="logo" src="assets/img/logo.svg" alt="" aria-hidden="true"> <span>SENN AI-X</span></div>
+  <div class="marca"><?= logo_svg() ?> <span>SENN AI-X</span></div>
   <nav>
     <?php foreach ($menu as $grupo => $itens):
         $visiveis = array_filter($itens, fn($i) => $u['perfil'] === 'admin' || in_array($u['perfil'], $i[2], true));

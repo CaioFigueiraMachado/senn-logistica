@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="tela-login">
 <main class="cartao login">
-  <h1><img class="logo" src="assets/img/logo.svg" alt="" aria-hidden="true"> SENN AI-X</h1>
+  <h1><?= logo_svg() ?> SENN AI-X</h1>
   <p class="sub">Gestão inteligente de entregas de última milha</p>
   <?php if (!$erro && ($f = flash())): ?><div class="aviso aviso-<?= e($f[1]) ?>" role="status"><?= e($f[0]) ?></div><?php endif; ?>
   <?php if ($erro): ?><div class="aviso aviso-erro" role="alert"><?= e($erro) ?></div><?php endif; ?>

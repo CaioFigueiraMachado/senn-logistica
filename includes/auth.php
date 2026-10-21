@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/logo.php';
 
 session_set_cookie_params(['httponly' => true, 'samesite' => 'Strict']);
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
