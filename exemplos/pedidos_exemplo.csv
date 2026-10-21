@@ -1,0 +1,5 @@
+codigo;destinatario;endereco;regiao;janela_inicio;janela_fim;peso_kg;volume_m3;prioridade;lat;lng
+CSV-001;Loja Vale Sul;Av. Independência, 800 - Independência;Independência;2026-10-22 09:00;2026-10-22 12:00;12.5;0.08;alta;-23.0071;-45.5422
+CSV-002;Farmácia Central;Rua XV de Novembro, 120 - Centro;Centro;2026-10-22 08:00;2026-10-22 11:00;3.2;0.02;media;-23.0268;-45.5549
+CSV-003;Mercado Bom Preço;Av. Charles Schnneider, 1500 - Jardim das Nações;Jardim das Nações;2026-10-22 13:00;2026-10-22 17:00;35;0.3;baixa;-23.0195;-45.5781
+CSV-004;Padaria Quiririm;Rua Dr. Pedro Costa, 45 - Quiririm;Quiririm;2026-10-22 10:00;2026-10-22 14:00;8;0.05;media;;
