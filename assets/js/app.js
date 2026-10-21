@@ -1,6 +1,34 @@
 /* Scripts compartilhados: mapas (com fallback), chat e utilidades */
 const CSRF = document.querySelector('meta[name=csrf]')?.content || '';
-const CORES = ['#0b5cd6', '#c2410c', '#15803d', '#7c3aed', '#be123c', '#0e7490'];
+const CORES = ['#2563eb', '#ea580c', '#16a34a', '#7c3aed', '#e11d48', '#0891b2'];
+
+/** Barra lateral: no desktop recolhe, no celular abre como gaveta. */
+function alternarMenu(forcar) {
+  const mobile = matchMedia('(max-width: 900px)').matches;
+  const cls = mobile ? 'menu-aberto' : 'menu-recolhido';
+  const ativo = document.body.classList.toggle(cls, forcar);
+  document.getElementById('menu-btn')?.setAttribute('aria-expanded', mobile ? ativo : !ativo);
+  if (!mobile) try { localStorage.setItem('menu', ativo ? 'recolhido' : ''); } catch (e) {}
+}
+try { if (localStorage.getItem('menu') === 'recolhido' && !matchMedia('(max-width: 900px)').matches) document.body.classList.add('menu-recolhido'); } catch (e) {}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.body.classList.remove('menu-aberto'); });
+
+function alternarTema() {
+  const escuro = document.documentElement.dataset.tema !== 'escuro';
+  if (escuro) document.documentElement.dataset.tema = 'escuro'; else delete document.documentElement.dataset.tema;
+  try { localStorage.setItem('tema', escuro ? 'escuro' : 'claro'); } catch (e) {}
+  location.reload(); // redesenha mapas e gráficos com as cores do tema
+}
+
+// Gráficos com a tipografia e as cores do tema
+if (typeof Chart !== 'undefined') {
+  const css = getComputedStyle(document.documentElement);
+  Chart.defaults.font.family = css.getPropertyValue('--fonte');
+  Chart.defaults.color = css.getPropertyValue('--sub').trim();
+  Chart.defaults.borderColor = css.getPropertyValue('--borda').trim();
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.elements.bar.borderRadius = 6;
+}
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

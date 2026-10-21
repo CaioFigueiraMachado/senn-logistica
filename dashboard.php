@@ -37,9 +37,9 @@ require __DIR__ . '/includes/header.php';
 </div>
 
 <div class="grade">
-  <section class="cartao"><h2>Entregas por dia</h2><canvas id="g-serie" aria-label="Gráfico de entregas por dia"></canvas></section>
-  <section class="cartao"><h2>Entregas por status</h2><canvas id="g-status" aria-label="Gráfico de entregas por status"></canvas></section>
-  <section class="cartao"><h2>Entregas e OTD por região</h2><canvas id="g-regiao" aria-label="Gráfico por região"></canvas></section>
+  <section class="cartao"><h2>Entregas por dia</h2><div class="grafico"><canvas id="g-serie" aria-label="Gráfico de entregas por dia"></canvas></div></section>
+  <section class="cartao"><h2>Entregas por status</h2><div class="grafico"><canvas id="g-status" aria-label="Gráfico de entregas por status"></canvas></div></section>
+  <section class="cartao"><h2>Entregas e OTD por região</h2><div class="grafico"><canvas id="g-regiao" aria-label="Gráfico por região"></canvas></div></section>
   <section class="cartao">
     <h2>Alertas recentes</h2>
     <?php foreach ($alertas as $a): ?><p class="insight"><span class="tag tag-erro"><?= e($a['tipo']) ?></span> <?= e($a['mensagem']) ?></p><?php endforeach; ?>
@@ -54,9 +54,10 @@ const NOMES = { pendente: 'Pendente', roteirizado: 'Roteirizado', a_caminho: 'A 
 const COR = { pendente: '#6b7280', roteirizado: '#d97706', a_caminho: '#0b5cd6', entregue: '#15803d', falha: '#b3261e' };
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof Chart === 'undefined') {
-    document.querySelectorAll('canvas').forEach(c => c.outerHTML = '<p class="aviso aviso-info">Gráfico indisponível offline.</p>');
+    document.querySelectorAll('.grafico').forEach(c => c.outerHTML = '<p class="aviso aviso-info">Gráfico indisponível offline.</p>');
     return;
   }
+  Chart.defaults.maintainAspectRatio = false;
   new Chart('g-serie', { type: 'line', data: { labels: K.serie.map(s => s.dia.slice(8, 10) + '/' + s.dia.slice(5, 7)),
     datasets: [{ label: 'No prazo', data: K.serie.map(s => s.no_prazo), borderColor: '#15803d', tension: .3 },
                { label: 'Atrasadas/falhas', data: K.serie.map(s => s.atrasadas), borderColor: '#b3261e', tension: .3 }] } });

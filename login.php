@@ -32,11 +32,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Entrar · <?= APP_NOME ?></title>
+<script>try { if (localStorage.getItem('tema') === 'escuro') document.documentElement.dataset.tema = 'escuro'; } catch (e) {}</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="tela-login">
 <main class="cartao login">
-  <h1><span class="logo" aria-hidden="true">◆</span> <?= APP_NOME ?></h1>
+  <h1><span class="logo" aria-hidden="true">◆</span> SENN AI-X</h1>
   <p class="sub">Gestão inteligente de entregas de última milha</p>
   <?php if ($erro): ?><div class="aviso aviso-erro" role="alert"><?= e($erro) ?></div><?php endif; ?>
   <form method="post">

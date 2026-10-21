@@ -1,4 +1,6 @@
-</main>
+  </main>
+</div>
+</div>
 <!-- RF13: Assistente Virtual SENN AI-X Helper -->
 <button id="chat-btn" class="chat-btn" aria-controls="chat" aria-expanded="false">💬 SENN AI-X Helper</button>
 <section id="chat" class="chat" hidden aria-label="Assistente virtual">

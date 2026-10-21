@@ -7,7 +7,8 @@
 require_once __DIR__ . '/ia.php';
 
 function criar_alerta(string $tipo, string $ref, string $msg): void {
-    $existe = q('SELECT id FROM alertas WHERE tipo = ? AND referencia = ? AND resolvido = 0', [$tipo, $ref])->fetchColumn();
+    // não repete um alerta aberto nem um resolvido nas últimas 24 h
+    $existe = q('SELECT id FROM alertas WHERE tipo = ? AND referencia = ? AND (resolvido = 0 OR resolvido_em > DATE_SUB(NOW(), INTERVAL 24 HOUR))', [$tipo, $ref])->fetchColumn();
     if ($existe) return;
     q('INSERT INTO alertas (tipo, referencia, mensagem) VALUES (?,?,?)', [$tipo, $ref, $msg]);
     enviar_email_alerta($tipo, $msg);
