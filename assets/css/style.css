@@ -28,7 +28,10 @@ a { color: inherit; }
 h1 { font-size: 24px; font-weight: 600; letter-spacing: -.02em; margin: 0 0 18px; }
 h2 { font-size: 16px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 12px; }
 h3 { font-size: 14px; font-weight: 600; margin: 0 0 8px; }
-code { background: var(--sec); padding: 1px 6px; border-radius: 5px; font-size: 13px; }
+code { background: var(--sec); padding: 1px 6px; border-radius: 5px; font-size: 13px; overflow-wrap: anywhere; }
+.colunas-csv { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0 0 12px; }
+.colunas-csv code { display: inline-block; padding: 3px 8px; border: 1px solid var(--borda); }
+.cartao { min-width: 0; overflow-wrap: break-word; }
 :focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .pular { position: absolute; left: -999px; top: 8px; background: var(--pri); color: var(--pri-txt); padding: 8px 12px; border-radius: 8px; z-index: 2000; }
@@ -128,10 +131,29 @@ td small { color: var(--sub); }
 
 .cor { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; background: currentColor; }
 
+/* ---------- Rastreamento: mapa + lista com a mesma altura ---------- */
+.rastreio { display: grid; gap: 18px; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); align-items: start; margin-bottom: 18px; }
+.rastreio > .cartao { margin-bottom: 0; }
+.lista-entregas { display: flex; flex-direction: column; height: 540px; }
+.rolagem { flex: 1; min-height: 0; overflow-y: auto; }
+.rolagem thead th { position: sticky; top: 0; background: var(--card); z-index: 1; }
+@media (max-width: 1100px) { .rastreio { grid-template-columns: 1fr; } .lista-entregas { height: 420px; } }
+
 /* ---------- Mapa ---------- */
 .mapa { height: 500px; border-radius: 10px; border: 1px solid var(--borda); z-index: 0; }
 [data-tema="escuro"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { border-radius: 10px; font-family: var(--fonte); }
+.leaflet-tooltip { font-family: var(--fonte); border-radius: 8px; }
+.pino-veiculo { position: relative; width: 36px; height: 36px; }
+.pino-circulo { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--cor); color: #fff; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .35); }
+.pino-circulo::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--cor); opacity: .6; animation: pulso 1.8s ease-out infinite; }
+.pino-placa { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); padding: 1px 7px; border-radius: 6px; background: #fff; color: #171717; border: 1px solid #e5e5e5; font: 600 11px/1.5 var(--fonte); letter-spacing: .02em; white-space: nowrap; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
+.pino-veiculo.parado .pino-circulo::after { display: none; }
+@keyframes pulso { from { transform: scale(.85); opacity: .7; } to { transform: scale(1.35); opacity: 0; } }
+.pino-deposito { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: #171717; color: #fff; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .35); }
+.legenda-mapa { display: flex; flex-wrap: wrap; gap: 4px 12px; max-width: 320px; padding: 7px 10px; border-radius: 8px; background: rgba(255, 255, 255, .92); color: #171717; font: 500 12px var(--fonte); box-shadow: 0 1px 4px rgba(0, 0, 0, .2); }
+.legenda-mapa span { display: inline-flex; align-items: center; gap: 5px; }
+.legenda-mapa i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .15); }
 
 /* ---------- Componentes de IA ---------- */
 .ia-card { position: relative; }

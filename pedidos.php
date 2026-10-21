@@ -132,9 +132,14 @@ $hoje = date('Y-m-d');
       <label>Arquivo CSV <input type="file" name="csv" accept=".csv" required></label>
       <button class="btn">Importar</button>
     </form>
-    <p>Colunas aceitas (separador <code>;</code> ou <code>,</code>):</p>
-    <p><code>codigo;destinatario;endereco;regiao;janela_inicio;janela_fim;peso_kg;volume_m3;prioridade;lat;lng</code></p>
-    <p><a href="exemplos/pedidos_exemplo.csv" download>Baixar CSV de exemplo</a></p>
+    <p>O arquivo precisa ter um cabeçalho com estas colunas, separadas por <code>;</code> ou <code>,</code>:</p>
+    <ul class="colunas-csv">
+      <?php foreach (['codigo', 'destinatario', 'endereco', 'regiao', 'janela_inicio', 'janela_fim', 'peso_kg', 'volume_m3', 'prioridade', 'lat', 'lng'] as $col): ?>
+        <li><code><?= $col ?></code></li>
+      <?php endforeach; ?>
+    </ul>
+    <p class="ia-fonte">Datas no formato 2026-10-22 09:00. Prioridade: baixa, media ou alta. Código, lat e lng são opcionais.</p>
+    <p><a class="btn btn-sec" href="exemplos/pedidos_exemplo.csv" download>Baixar CSV de exemplo</a></p>
   </section>
 </div>
 
@@ -152,14 +157,14 @@ $hoje = date('Y-m-d');
     <tbody>
     <?php foreach ($lista as $pd): ?>
       <tr>
-        <td><strong><?= e($pd['codigo']) ?></strong></td>
+        <td><a href="pedido.php?id=<?= $pd['id'] ?>"><strong><?= e($pd['codigo']) ?></strong></a></td>
         <td><?= e($pd['destinatario']) ?><br><small><?= e($pd['endereco']) ?></small></td>
         <td><?= e($pd['regiao']) ?></td>
         <td><?= date('d/m H:i', strtotime($pd['janela_inicio'])) ?> - <?= date('H:i', strtotime($pd['janela_fim'])) ?></td>
-        <td><?= e($pd['peso_kg']) ?> kg<br><?= e($pd['volume_m3']) ?> m³</td>
+        <td><?= number_format($pd['peso_kg'], 1, ',', '.') ?> kg<br><?= number_format($pd['volume_m3'], 3, ',', '.') ?> m³</td>
         <td><span class="tag tag-<?= $pd['prioridade'] ?>"><?= PRIORIDADES[$pd['prioridade']] ?></span></td>
         <td><span class="tag tag-<?= $pd['status'] ?>"><?= STATUS_P[$pd['status']] ?></span></td>
-        <td><?= $pd['risco_atraso'] !== null ? e($pd['risco_atraso']) . '%' : '-' ?></td>
+        <td><?= $pd['risco_atraso'] !== null && !in_array($pd['status'], ['entregue', 'falha'], true) ? number_format($pd['risco_atraso'], 1, ',', '') . '%' : '-' ?></td>
         <td class="acoes">
           <form method="post" onsubmit="return confirm('Remover os dados pessoais deste destinatário?')"><?= csrf_campo() ?><input type="hidden" name="acao" value="anonimizar"><button class="btn-sec btn-peq" name="id" value="<?= $pd['id'] ?>">Anonimizar</button></form>
           <?php if ($pd['status'] === 'pendente'): ?>

@@ -5,16 +5,49 @@ require_once __DIR__ . '/../includes/alertas.php';
 exigir_perfil('gestor', 'despachante');
 header('Content-Type: application/json; charset=utf-8');
 
-// Modo demonstração: avança os veículos em rota na direção da próxima parada
+// Modo demonstração: coloca as rotas de hoje na rua e faz os veículos andarem até as paradas
+$simulacao = null;
 if (!empty($_GET['simular'])) {
-    $emRota = q("SELECT r.id rota, v.id, v.lat, v.lng FROM rotas r JOIN veiculos v ON v.id = r.veiculo_id WHERE r.status = 'em_andamento'")->fetchAll();
-    foreach ($emRota as $v) {
-        $prox = q("SELECT lat, lng FROM pedidos WHERE rota_id = ? AND status = 'a_caminho' ORDER BY ordem_rota LIMIT 1", [$v['rota']])->fetch();
-        if (!$prox) continue;
-        $lat = $v['lat'] + ($prox['lat'] - $v['lat']) * 0.25;
-        $lng = $v['lng'] + ($prox['lng'] - $v['lng']) * 0.25;
-        q('UPDATE veiculos SET lat = ?, lng = ?, posicao_em = NOW() WHERE id = ?', [$lat, $lng, $v['id']]);
+    // Pedidos de hoje sem rota: a IA monta as rotas antes de começar
+    $pendentes = q("SELECT * FROM pedidos WHERE status = 'pendente' AND DATE(janela_inicio) = CURDATE()")->fetchAll();
+    $livres = q("SELECT * FROM veiculos WHERE status = 'disponivel'")->fetchAll();
+    if ($pendentes && $livres) {
+        $res = otimizar_rotas($pendentes, $livres, date('Y-m-d'));
+        salvar_rotas($res['rotas'], date('Y-m-d'));
     }
+    // Rotas de hoje ainda não iniciadas saem do depósito
+    $paraIniciar = q("SELECT id, veiculo_id FROM rotas WHERE data_rota = CURDATE() AND status IN ('planejada','liberada')")->fetchAll();
+    foreach ($paraIniciar as $r) {
+        q("UPDATE rotas SET status = 'em_andamento' WHERE id = ?", [$r['id']]);
+        q("UPDATE pedidos SET status = 'a_caminho' WHERE rota_id = ? AND status = 'roteirizado'", [$r['id']]);
+        q("UPDATE veiculos SET status = 'em_rota', lat = ?, lng = ?, posicao_em = NOW() WHERE id = ?", [DEPOSITO_LAT, DEPOSITO_LNG, $r['veiculo_id']]);
+    }
+    $emRota = q("SELECT r.id rota, r.motorista_id, v.id, v.lat, v.lng FROM rotas r JOIN veiculos v ON v.id = r.veiculo_id WHERE r.status = 'em_andamento'")->fetchAll();
+    $entregues = 0;
+    foreach ($emRota as $v) {
+        $prox = q("SELECT id, lat, lng FROM pedidos WHERE rota_id = ? AND status = 'a_caminho' ORDER BY ordem_rota LIMIT 1", [$v['rota']])->fetch();
+        if (!$prox) {
+            // sem paradas: volta ao depósito e encerra a rota
+            q("UPDATE rotas SET status = 'concluida' WHERE id = ?", [$v['rota']]);
+            q("UPDATE veiculos SET status = 'disponivel', lat = ?, lng = ?, posicao_em = NOW() WHERE id = ?", [DEPOSITO_LAT, DEPOSITO_LNG, $v['id']]);
+            continue;
+        }
+        // anda até 1,5 km por ciclo (5 s) na direção da próxima parada (acelerado para a demonstração)
+        $dist = distancia_km($v['lat'], $v['lng'], $prox['lat'], $prox['lng']);
+        $f = $dist > 0 ? min(1, 1.5 / $dist) : 1;
+        $lat = $v['lat'] + ($prox['lat'] - $v['lat']) * $f;
+        $lng = $v['lng'] + ($prox['lng'] - $v['lng']) * $f;
+        q('UPDATE veiculos SET lat = ?, lng = ?, posicao_em = NOW() WHERE id = ?', [$lat, $lng, $v['id']]);
+        if ($f >= 1) {
+            // chegou: registra a entrega com comprovante simulado
+            q("UPDATE pedidos SET status = 'entregue', entregue_em = NOW() WHERE id = ?", [$prox['id']]);
+            q("INSERT INTO comprovantes (pedido_id, motorista_id, tipo, evidencia, lat, lng) VALUES (?, ?, 'codigo', 'Simulação de demonstração', ?, ?)", [$prox['id'], $v['motorista_id'], $lat, $lng]);
+            $entregues++;
+        }
+    }
+    $simulacao = $emRota
+        ? 'Simulação ligada: ' . count($emRota) . ' veículo(s) em rota andando até as próximas paradas. Cada chegada registra a entrega automaticamente.'
+        : 'Simulação ligada, mas todas as entregas de hoje já foram feitas. Cadastre novos pedidos para ver os veículos andando.';
 }
 
 verificar_alertas();
@@ -34,5 +67,11 @@ $veiculos = q("SELECT v.id, v.placa, v.tipo, v.status, v.lat, v.lng, v.posicao_e
 if (!empty($_GET['motorista'])) $veiculos = array_values(array_filter($veiculos, fn($v) => $v['motorista_id'] == $_GET['motorista']));
 if (!empty($_GET['rota'])) $veiculos = array_values(array_filter($veiculos, fn($v) => $v['rota'] == $_GET['rota']));
 
+// Trajeto que falta para cada veículo em rota (paradas ainda não visitadas, na ordem)
+foreach ($veiculos as &$v) {
+    $v['caminho'] = $v['rota'] ? q("SELECT lat, lng FROM pedidos WHERE rota_id = ? AND status = 'a_caminho' ORDER BY ordem_rota", [$v['rota']])->fetchAll(PDO::FETCH_NUM) : [];
+}
+unset($v);
+
 $alertas = (int)q('SELECT COUNT(*) FROM alertas WHERE resolvido = 0')->fetchColumn();
-echo json_encode(['atualizado' => date('H:i:s'), 'veiculos' => $veiculos, 'entregas' => $entregas, 'alertas' => $alertas]);
+echo json_encode(['atualizado' => date('H:i:s'), 'veiculos' => $veiculos, 'entregas' => $entregas, 'alertas' => $alertas, 'simulacao' => $simulacao]);

@@ -97,6 +97,21 @@ function otimizar_rotas(array $pedidos, array $veiculos, string $data): array {
     return ['rotas' => $rotas, 'nao_alocados' => array_values($restantes)];
 }
 
+/** Grava no banco as rotas calculadas por otimizar_rotas() e marca os pedidos como roteirizados. */
+function salvar_rotas(array $rotas, string $data): void {
+    db()->beginTransaction();
+    foreach ($rotas as $r) {
+        $mot = q('SELECT id FROM motoristas WHERE veiculo_id = ? AND disponivel = 1 LIMIT 1', [$r['veiculo']['id']])->fetchColumn() ?: null;
+        q('INSERT INTO rotas (data_rota, veiculo_id, motorista_id, distancia_km, distancia_base_km, tempo_min, custo) VALUES (?,?,?,?,?,?,?)',
+          [$data, $r['veiculo']['id'], $mot, $r['distancia_km'], $r['distancia_base_km'], $r['tempo_min'], $r['custo']]);
+        $rid = db()->lastInsertId();
+        foreach ($r['paradas'] as $i => $p) {
+            q("UPDATE pedidos SET status = 'roteirizado', rota_id = ?, ordem_rota = ? WHERE id = ?", [$rid, $i + 1, $p['id']]);
+        }
+    }
+    db()->commit();
+}
+
 function distancia_total(array $paradas): float {
     $km = 0; $lat = DEPOSITO_LAT; $lng = DEPOSITO_LNG;
     foreach ($paradas as $p) { $km += distancia_km($lat, $lng, $p['lat'], $p['lng']); $lat = $p['lat']; $lng = $p['lng']; }
@@ -318,7 +333,7 @@ function gerar_insights(int $dias = 30): array {
     $regs = $est['porRegiao'];
     if ($regs) {
         $pior = $regs[0]; $melhor = end($regs);
-        $ins[] = "{$pior['regiao']} é onde mais acontecem atrasos: só {$pior['otd']}% das entregas chegam no prazo, contra {$melhor['otd']}% em {$melhor['regiao']}. Vale revisar as janelas e a ordem das paradas nessa região.";
+        $ins[] = "{$pior['regiao']} é onde mais acontecem atrasos: só " . str_replace('.', ',', $pior['otd']) . '% das entregas chegam no prazo, contra ' . str_replace('.', ',', $melhor['otd']) . "% em {$melhor['regiao']}. Vale revisar as janelas e a ordem das paradas nessa região.";
         usort($regs, fn($a, $b) => $b['custo_entrega'] <=> $a['custo_entrega']);
         $caro = $regs[0];
         $ins[] = "{$caro['regiao']} é a região mais cara de atender, cerca de R$ " . number_format($caro['custo_entrega'], 2, ',', '.') . " por entrega. Juntar os pedidos de lá numa rota própria reduz os quilômetros rodados à toa.";
@@ -328,7 +343,7 @@ function gerar_insights(int $dias = 30): array {
     $horas = $est['porHora'];
     if ($horas) {
         usort($horas, fn($a, $b) => $b['atraso'] <=> $a['atraso']);
-        $ins[] = "O pior horário é o das {$horas[0]['h']}h: {$horas[0]['atraso']}% dessas entregas atrasam. Sair mais cedo com os veículos ou alargar essas janelas deve resolver boa parte.";
+        $ins[] = "O pior horário é o das {$horas[0]['h']}h: " . str_replace('.', ',', $horas[0]['atraso']) . "% dessas entregas atrasam. Sair mais cedo com os veículos ou alargar essas janelas deve resolver boa parte.";
     }
     $prev = prever_demanda(7);
     $total7 = array_sum(array_map('array_sum', $prev));

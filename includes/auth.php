@@ -44,6 +44,13 @@ function usuario(): ?array {
 /** Bloqueia a página para quem não estiver logado ou não tiver um dos perfis informados. */
 function exigir_perfil(string ...$perfis): array {
     $u = usuario();
+    // encerra a sessão após 30 minutos sem uso
+    if ($u && time() - ($_SESSION['ultimo_uso'] ?? time()) > 1800) {
+        $_SESSION = [];
+        $u = null;
+        flash('Sua sessão expirou por inatividade. Entre novamente.', 'info');
+    }
+    $_SESSION['ultimo_uso'] = time();
     if (!$u) {
         header('Location: ' . url('login.php'));
         exit;

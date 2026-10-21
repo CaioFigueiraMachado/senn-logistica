@@ -19,17 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pedidos = q("SELECT * FROM pedidos WHERE status = 'pendente' AND id IN ({$in($ids)})", $ids)->fetchAll();
             $veiculos = q("SELECT * FROM veiculos WHERE status = 'disponivel' AND id IN ({$in($vids)})", $vids)->fetchAll();
             $res = otimizar_rotas($pedidos, $veiculos, $data);
-            db()->beginTransaction();
-            foreach ($res['rotas'] as $r) {
-                $mot = q('SELECT id FROM motoristas WHERE veiculo_id = ? AND disponivel = 1 LIMIT 1', [$r['veiculo']['id']])->fetchColumn() ?: null;
-                q('INSERT INTO rotas (data_rota, veiculo_id, motorista_id, distancia_km, distancia_base_km, tempo_min, custo) VALUES (?,?,?,?,?,?,?)',
-                  [$data, $r['veiculo']['id'], $mot, $r['distancia_km'], $r['distancia_base_km'], $r['tempo_min'], $r['custo']]);
-                $rid = db()->lastInsertId();
-                foreach ($r['paradas'] as $i => $p) {
-                    q("UPDATE pedidos SET status = 'roteirizado', rota_id = ?, ordem_rota = ? WHERE id = ?", [$rid, $i + 1, $p['id']]);
-                }
-            }
-            db()->commit();
+            salvar_rotas($res['rotas'], $data);
             $n = count($res['rotas']);
             $km = array_sum(array_column($res['rotas'], 'distancia_km'));
             registrar_log('rotas_geradas', "$n rotas, $km km");

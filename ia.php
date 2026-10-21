@@ -51,7 +51,7 @@ require __DIR__ . '/includes/header.php';
       $nivel = $p['risco'] >= 60 ? 'erro' : ($p['risco'] >= 35 ? 'alerta' : 'ok'); ?>
     <article class="risco risco-<?= $nivel ?>">
       <header>
-        <strong><?= e($p['codigo']) ?></strong> · <?= e($p['regiao']) ?>
+        <a href="pedido.php?id=<?= $p['id'] ?>"><strong><?= e($p['codigo']) ?></strong></a> · <?= e($p['regiao']) ?>
         <span class="tag tag-<?= $p['status'] ?>"><?= e($p['status']) ?></span>
       </header>
       <div class="barra" role="meter" aria-valuenow="<?= $p['risco'] ?>" aria-valuemin="0" aria-valuemax="100" aria-label="Risco <?= $p['risco'] ?>%"><span style="width: <?= $p['risco'] ?>%"></span></div>

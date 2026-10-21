@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <main class="cartao login">
   <h1><span class="logo" aria-hidden="true">S</span> SENN AI-X</h1>
   <p class="sub">Gestão inteligente de entregas de última milha</p>
+  <?php if (!$erro && ($f = flash())): ?><div class="aviso aviso-<?= e($f[1]) ?>" role="status"><?= e($f[0]) ?></div><?php endif; ?>
   <?php if ($erro): ?><div class="aviso aviso-erro" role="alert"><?= e($erro) ?></div><?php endif; ?>
   <form method="post">
     <?= csrf_campo() ?>
@@ -54,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </label>
     <button class="btn">Entrar</button>
   </form>
-  <p class="demo">Esqueceu a senha? Fale com o administrador da sua transportadora.</p>
+  <p class="demo">Esqueceu a senha? Fale com o administrador da sua transportadora.<br><a href="privacidade.php">Política de privacidade</a></p>
 </main>
 </body>
 </html>
