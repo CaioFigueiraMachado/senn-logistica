@@ -43,7 +43,8 @@ code { background: var(--sec); padding: 1px 6px; border-radius: 5px; font-size: 
 .lateral { width: 256px; flex-shrink: 0; background: var(--lateral); border-right: 1px solid var(--borda); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; transition: margin-left .2s; z-index: 1100; }
 .menu-recolhido .lateral { margin-left: -256px; }
 .marca { display: flex; align-items: center; gap: 8px; padding: 16px 18px; font-weight: 700; font-size: 16px; letter-spacing: -.02em; }
-.logo { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--pri); color: var(--pri-txt); font-size: 14px; }
+.logo { display: block; width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; }
+.login .logo { width: 40px; height: 40px; border-radius: 10px; }
 .lateral nav { flex: 1; overflow-y: auto; padding: 4px 10px; }
 .grupo { margin: 16px 8px 6px; font-size: 12px; font-weight: 500; color: var(--sub); }
 .lateral nav a { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--raio-p); text-decoration: none; color: var(--txt); font-weight: 450; margin-bottom: 2px; }
@@ -57,6 +58,10 @@ code { background: var(--sec); padding: 1px 6px; border-radius: 5px; font-size: 
 .avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--sec); border: 1px solid var(--borda); font-size: 12px; font-weight: 600; flex-shrink: 0; }
 .avatar-peq { width: 32px; height: 32px; }
 .lateral-fundo { display: none; }
+.perfil-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-decoration: none; border-radius: var(--raio-p); padding: 4px; margin: -4px; }
+.perfil-link:hover { background: var(--hover); }
+.perfil-topo { display: flex; align-items: center; gap: 16px; }
+.avatar-grande { width: 64px; height: 64px; font-size: 22px; }
 
 .principal { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .topo { position: sticky; top: 0; z-index: 900; display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 20px; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borda); }

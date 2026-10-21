@@ -40,6 +40,7 @@ $menu = [
         'backup.php'   => ['Backup', 'banco', []],
     ],
     'Ajuda' => [
+        'perfil.php' => ['Meu perfil', 'pessoa', ['gestor', 'despachante', 'motorista']],
         'manual.php' => ['Manual', 'livro', ['gestor', 'despachante', 'motorista']],
     ],
 ];
@@ -56,7 +57,8 @@ $iniciais = mb_strtoupper(implode('', array_map(fn($p) => mb_substr($p, 0, 1), a
 <script>try { if (localStorage.getItem('tema') === 'escuro') document.documentElement.dataset.tema = 'escuro'; } catch (e) {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" type="image/svg+xml" href="assets/img/logo.svg">
+<link rel="stylesheet" href="assets/css/style.css?v=<?= filemtime(__DIR__ . '/../assets/css/style.css') ?>">
 <?php if (!empty($usaMapa)): ?>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -69,7 +71,7 @@ $iniciais = mb_strtoupper(implode('', array_map(fn($p) => mb_substr($p, 0, 1), a
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 <div class="app">
 <aside class="lateral" id="lateral" aria-label="Menu principal">
-  <div class="marca"><span class="logo" aria-hidden="true">S</span> <span>SENN AI-X</span></div>
+  <div class="marca"><img class="logo" src="assets/img/logo.svg" alt="" aria-hidden="true"> <span>SENN AI-X</span></div>
   <nav>
     <?php foreach ($menu as $grupo => $itens):
         $visiveis = array_filter($itens, fn($i) => $u['perfil'] === 'admin' || in_array($u['perfil'], $i[2], true));
@@ -82,8 +84,10 @@ $iniciais = mb_strtoupper(implode('', array_map(fn($p) => mb_substr($p, 0, 1), a
     <?php endforeach; ?>
   </nav>
   <div class="perfil-box">
-    <span class="avatar" aria-hidden="true"><?= e($iniciais) ?></span>
-    <div class="perfil-txt"><strong><?= e($u['nome']) ?></strong><small><?= PERFIS[$u['perfil']] ?></small></div>
+    <a href="perfil.php" class="perfil-link" title="Meu perfil">
+      <span class="avatar" aria-hidden="true"><?= e($iniciais) ?></span>
+      <span class="perfil-txt"><strong><?= e($u['nome']) ?></strong><small><?= PERFIS[$u['perfil']] ?></small></span>
+    </a>
     <a href="logout.php" class="btn-icone" title="Sair" aria-label="Sair"><?= icone('sair', $icones) ?></a>
   </div>
 </aside>
@@ -100,7 +104,7 @@ $iniciais = mb_strtoupper(implode('', array_map(fn($p) => mb_substr($p, 0, 1), a
       <button class="btn-icone" onclick="alternarTema()" aria-label="Alternar tema claro/escuro" title="Tema">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
       </button>
-      <span class="avatar avatar-peq" title="<?= e($u['nome']) ?>" aria-hidden="true"><?= e($iniciais) ?></span>
+      <a href="perfil.php" class="avatar avatar-peq" title="Meu perfil" aria-label="Meu perfil" style="text-decoration: none"><?= e($iniciais) ?></a>
     </div>
   </header>
   <main id="conteudo" class="conteudo">

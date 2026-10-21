@@ -2,6 +2,9 @@
 const CSRF = document.querySelector('meta[name=csrf]')?.content || '';
 const CORES = ['#2563eb', '#ea580c', '#16a34a', '#7c3aed', '#e11d48', '#0891b2'];
 
+// Se o navegador reexibir a página da memória (seta voltar), recarrega para o servidor validar a sessão
+window.addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
+
 /** Barra lateral: no desktop recolhe, no celular abre como gaveta. */
 function alternarMenu(forcar) {
   const mobile = matchMedia('(max-width: 900px)').matches;

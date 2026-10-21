@@ -14,6 +14,6 @@
     <button>Enviar</button>
   </form>
 </section>
-<script src="assets/js/app.js"></script>
+<script src="assets/js/app.js?v=<?= filemtime(__DIR__ . '/../assets/js/app.js') ?>"></script>
 </body>
 </html>

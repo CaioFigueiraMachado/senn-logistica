@@ -1,6 +1,13 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
 
+// Voltar para a tela de login (inclusive pela seta do navegador) encerra a sessão
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && usuario()) {
+    registrar_log('logout', 'voltou ao login');
+    $_SESSION = [];
+    session_regenerate_id(true);
+}
+
 $erro = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exigir_csrf();
@@ -34,11 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>Entrar · <?= APP_NOME ?></title>
 <script>try { if (localStorage.getItem('tema') === 'escuro') document.documentElement.dataset.tema = 'escuro'; } catch (e) {}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" type="image/svg+xml" href="assets/img/logo.svg">
+<link rel="stylesheet" href="assets/css/style.css?v=<?= filemtime(__DIR__ . '/assets/css/style.css') ?>">
 </head>
 <body class="tela-login">
 <main class="cartao login">
-  <h1><span class="logo" aria-hidden="true">S</span> SENN AI-X</h1>
+  <h1><img class="logo" src="assets/img/logo.svg" alt="" aria-hidden="true"> SENN AI-X</h1>
   <p class="sub">Gestão inteligente de entregas de última milha</p>
   <?php if (!$erro && ($f = flash())): ?><div class="aviso aviso-<?= e($f[1]) ?>" role="status"><?= e($f[0]) ?></div><?php endif; ?>
   <?php if ($erro): ?><div class="aviso aviso-erro" role="alert"><?= e($erro) ?></div><?php endif; ?>

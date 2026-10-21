@@ -6,6 +6,9 @@ if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
+// Nenhuma página fica em cache: depois de sair, a seta "voltar" não mostra telas do sistema
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
 
 const PERFIS = [
     'admin' => 'Administrador',
