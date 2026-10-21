@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS rotas (
   veiculo_id INT NOT NULL,
   motorista_id INT NULL,
   distancia_km DECIMAL(10,2) NOT NULL DEFAULT 0,
+  distancia_base_km DECIMAL(10,2) NOT NULL DEFAULT 0,
   tempo_min INT NOT NULL DEFAULT 0,
   custo DECIMAL(10,2) NOT NULL DEFAULT 0,
   status ENUM('planejada','liberada','em_andamento','concluida') NOT NULL DEFAULT 'planejada',

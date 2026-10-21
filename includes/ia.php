@@ -80,11 +80,16 @@ function otimizar_rotas(array $pedidos, array $veiculos, string $data): array {
         }
         if (!$paradas) continue;
 
+        // referência sem otimização: mesmas paradas na ordem de início da janela
+        $ingenua = $paradas;
+        usort($ingenua, fn($a, $b) => $a['janela_inicio'] <=> $b['janela_inicio']);
+        $kmBase = distancia_total($ingenua);
+
         $paradas = melhorar_2opt($paradas, $data);
         $km = distancia_total($paradas);
         $tempo = (int)round($km / VELOCIDADE_MEDIA_KMH * 60 + count($paradas) * TEMPO_PARADA_MIN);
         $rotas[] = [
-            'veiculo' => $v, 'paradas' => $paradas, 'distancia_km' => round($km, 2),
+            'veiculo' => $v, 'paradas' => $paradas, 'distancia_km' => round($km, 2), 'distancia_base_km' => round(max($kmBase, $km), 2),
             'tempo_min' => $tempo, 'custo' => round($km * $v['custo_km'], 2),
             'carga_kg' => $carga, 'ocupacao' => round($carga / $v['capacidade_kg'] * 100),
         ];
@@ -258,9 +263,18 @@ function gemini(string $prompt): ?string {
     $resp = curl_exec($ch);
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    if ($resp === false || $code !== 200) return null;
-    $json = json_decode($resp, true);
-    return $json['candidates'][0]['content']['parts'][0]['text'] ?? null;
+    $texto = $resp !== false && $code === 200 ? (json_decode($resp, true)['candidates'][0]['content']['parts'][0]['text'] ?? null) : null;
+    // guarda a falha para a interface avisar que está em modo fallback
+    if (session_status() === PHP_SESSION_ACTIVE) $_SESSION['ia_falhou_em'] = $texto ? null : time();
+    return $texto;
+}
+
+/** Situação da IA externa, exibida nos componentes de IA. */
+function ia_status(): array {
+    if (!GEMINI_API_KEY) return ['modo' => 'local', 'texto' => 'Modo local: IA externa não configurada'];
+    if (!empty($_SESSION['ia_falhou_em']) && time() - $_SESSION['ia_falhou_em'] < 300)
+        return ['modo' => 'fallback', 'texto' => 'Gemini indisponível: usando modelo local (fallback)'];
+    return ['modo' => 'online', 'texto' => 'Gemini ' . GEMINI_MODEL . ' conectado'];
 }
 
 /* ------------------------------------------------------------------ */

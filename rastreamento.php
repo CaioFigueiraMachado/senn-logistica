@@ -19,7 +19,7 @@ require __DIR__ . '/includes/header.php';
   <label>Região <select name="regiao"><option value="">Todas</option><?php foreach ($regioes as $r): ?><option><?= e($r) ?></option><?php endforeach; ?></select></label>
   <label>Status <select name="status"><option value="">Todos</option><option value="roteirizado">Roteirizado</option><option value="a_caminho">A caminho</option><option value="entregue">Entregue</option><option value="falha">Falha</option><option value="pendente">Pendente</option></select></label>
   <label><input type="checkbox" name="simular" value="1"> Simular movimento (demonstração)</label>
-  <span aria-live="polite">Atualizado às <strong id="hora">--</strong> · <a href="alertas.php"><span id="n-alertas">0</span> alertas abertos</a></span>
+  <span aria-live="polite"><span id="conexao" class="conexao">Tempo real (atualiza a cada 5 s)</span> · Atualizado às <strong id="hora">--</strong> · <a href="alertas.php"><span id="n-alertas">0</span> alertas abertos</a></span>
 </form>
 <div class="grade">
   <section class="cartao" style="grid-column: span 2; min-width: 0">
@@ -44,7 +44,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 async function atualizar() {
   const qs = new URLSearchParams(new FormData(document.getElementById('filtros')));
-  const d = await (await fetch('api/posicoes.php?' + qs)).json();
+  const conexao = document.getElementById('conexao');
+  let d;
+  try {
+    d = await (await fetch('api/posicoes.php?' + qs)).json();
+    conexao.className = 'conexao';
+    conexao.textContent = 'Tempo real (atualiza a cada 5 s)';
+  } catch {
+    // mantém os últimos dados na tela e tenta de novo no próximo ciclo
+    conexao.className = 'conexao off';
+    conexao.textContent = 'Sem conexão, tentando novamente...';
+    return;
+  }
   document.getElementById('hora').textContent = d.atualizado;
   document.getElementById('n-alertas').textContent = d.alertas;
   document.getElementById('n-entregas').textContent = d.entregas.length;

@@ -25,10 +25,23 @@ function criarMapa(id, centro) {
     return null;
   }
   const mapa = L.map(id).setView(centro, 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  const base = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; OpenStreetMap',
   }).addTo(mapa);
+  // Fallback: se o fundo do mapa não carregar, os marcadores continuam sobre um fundo neutro
+  let erros = 0;
+  base.on('tileerror', () => {
+    if (++erros !== 3) return;
+    el.style.background = '#e8edf5';
+    el.insertAdjacentHTML('beforebegin', '<div class="aviso aviso-info" role="status">Serviço de mapas offline: exibindo veículos e entregas sem o mapa de fundo.</div>');
+  });
   return mapa;
+}
+
+/** Selo que indica se a resposta veio da IA externa ou do modelo local. */
+function seloIA(fonte) {
+  const online = /gemini/i.test(fonte || '');
+  return `<span class="selo ${online ? 'selo-on' : 'selo-local'}">${online ? '✨ ' + esc(fonte) : '⚙ ' + esc(fonte || 'Modelo local')}</span>`;
 }
 
 function iconeNumero(n, cor) {
@@ -83,20 +96,33 @@ function desenharRotas(id, rotas, deposito) {
     msgs.scrollTop = msgs.scrollHeight;
     return d;
   };
-  form.onsubmit = async e => {
-    e.preventDefault();
-    const pergunta = txt.value.trim();
-    if (!pergunta) return;
+  const perguntar = async pergunta => {
     add(esc(pergunta), 'eu');
-    txt.value = '';
-    const espera = add('Pensando...', 'bot');
+    const espera = add('<span class="digitando" aria-label="Pensando"><i></i><i></i><i></i></span>', 'bot');
     try {
       const r = await postJSON('api/chat.php', { pergunta });
       let html = esc(r.resposta);
       (r.acoes || []).forEach(a => { html += `<br><a class="acao" href="${esc(a.url)}">→ ${esc(a.rotulo)}</a>`; });
-      espera.innerHTML = html;
+      espera.innerHTML = html + '<br>' + seloIA(r.fonte === 'gemini' ? 'Gemini' : 'Modelo local');
     } catch {
-      espera.textContent = 'Não consegui responder agora. Tente novamente.';
+      espera.textContent = 'Sem conexão com o servidor. Tente novamente.';
     }
   };
+  form.onsubmit = e => {
+    e.preventDefault();
+    const p = txt.value.trim();
+    if (!p) return;
+    txt.value = '';
+    perguntar(p);
+  };
+  // Sugestões rápidas
+  const chips = document.createElement('div');
+  chips.className = 'chips';
+  ['Entregas de hoje', 'Entregas atrasadas', 'Qual o OTD?', 'Previsão da semana', 'Como importar CSV?'].forEach(s => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = s;
+    b.onclick = () => perguntar(s);
+    chips.appendChild(b);
+  });
+  msgs.appendChild(chips);
 })();

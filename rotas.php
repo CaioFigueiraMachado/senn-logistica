@@ -22,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db()->beginTransaction();
             foreach ($res['rotas'] as $r) {
                 $mot = q('SELECT id FROM motoristas WHERE veiculo_id = ? AND disponivel = 1 LIMIT 1', [$r['veiculo']['id']])->fetchColumn() ?: null;
-                q('INSERT INTO rotas (data_rota, veiculo_id, motorista_id, distancia_km, tempo_min, custo) VALUES (?,?,?,?,?,?)',
-                  [$data, $r['veiculo']['id'], $mot, $r['distancia_km'], $r['tempo_min'], $r['custo']]);
+                q('INSERT INTO rotas (data_rota, veiculo_id, motorista_id, distancia_km, distancia_base_km, tempo_min, custo) VALUES (?,?,?,?,?,?,?)',
+                  [$data, $r['veiculo']['id'], $mot, $r['distancia_km'], $r['distancia_base_km'], $r['tempo_min'], $r['custo']]);
                 $rid = db()->lastInsertId();
                 foreach ($r['paradas'] as $i => $p) {
                     q("UPDATE pedidos SET status = 'roteirizado', rota_id = ?, ordem_rota = ? WHERE id = ?", [$rid, $i + 1, $p['id']]);
@@ -67,6 +67,28 @@ require __DIR__ . '/includes/header.php';
 ?>
 <h1>Roteirização inteligente</h1>
 <form class="acoes" method="get"><label>Data <input type="date" name="data" value="<?= e($data) ?>"></label><button>Ver</button></form>
+
+<details class="cartao ia-card">
+  <summary><strong>Como a IA monta as rotas</strong> · VRP com capacidade e janelas de tempo (CVRPTW)</summary>
+  <ol>
+    <li><strong>Priorização:</strong> pedidos ordenados por prioridade e pelo fim da janela; veículos do maior para o menor.</li>
+    <li><strong>Construção (vizinho mais próximo):</strong> a partir do depósito, cada veículo recebe a próxima entrega viável de menor custo, respeitando peso (kg), volume (m³), janela de entrega e autonomia.</li>
+    <li><strong>Melhoria (2-opt):</strong> inverte trechos da rota enquanto a distância diminuir sem violar nenhuma janela.</li>
+    <li><strong>Estimativas:</strong> distância por Haversine × 1,3 (malha urbana), 28 km/h de média, 6 min por parada; custo = km × custo/km do veículo.</li>
+  </ol>
+  <p class="ia-fonte">Algoritmo local em PHP (<code>includes/ia.php</code>): funciona sem internet. Detalhes no README.</p>
+</details>
+<?php if ($rotas):
+    $kmT = array_sum(array_column($rotas, 'distancia_km'));
+    $kmB = array_sum(array_map(fn($r) => max($r['distancia_base_km'], $r['distancia_km']), $rotas));
+    $econ = $kmB > 0 ? round(($kmB - $kmT) / $kmB * 100, 1) : 0; ?>
+<div class="kpis">
+  <div class="kpi"><div class="v"><?= count($rotas) ?></div><div class="r">Rotas no dia</div></div>
+  <div class="kpi"><div class="v"><?= number_format($kmT, 1, ',', '.') ?> km</div><div class="r">Distância otimizada</div></div>
+  <div class="kpi"><div class="v"><?= $econ ?>%</div><div class="r">Economia vs. seguir só o horário (<?= number_format($kmB, 1, ',', '.') ?> km)</div></div>
+  <div class="kpi"><div class="v">R$ <?= number_format(array_sum(array_column($rotas, 'custo')), 2, ',', '.') ?></div><div class="r">Custo total estimado</div></div>
+</div>
+<?php endif; ?>
 
 <section class="cartao">
   <h2>1. Selecione entregas e veículos do dia</h2>
